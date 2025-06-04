@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard do Fornecedor - Sistema de Gestão de Inventário</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-boxes"></i> Dashboard do Fornecedor</h1>
+            <button id="logoutBtn" class="btn-secondary">Sair</button>
+        </header>
+
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#" class="active" data-section="produtos">Meus Produtos</a></li>
+                <li><a href="#" data-section="pedidos">Pedidos</a></li>
+                <li><a href="#" data-section="historico">Histórico</a></li>
+                <li><a href="#" data-section="analytics">Análises</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <!-- Produtos Section -->
+            <section id="produtos" class="section active">
+                <h2>Meus Produtos no Estoque</h2>
+                <div class="estoque-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Produto</th>
+                                <th>Quantidade</th>
+                                <th>Status</th>
+                                <th>Última Atualização</th>
+                            </tr>
+                        </thead>
+                        <tbody id="produtosTableBody">
+                            <!-- Dados serão inseridos via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Pedidos Section -->
+            <section id="pedidos" class="section">
+                <h2>Pedidos Pendentes</h2>
+                <div class="estoque-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID do Pedido</th>
+                                <th>Data</th>
+                                <th>Produtos</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pedidosTableBody">
+                            <!-- Dados serão inseridos via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Histórico Section -->
+            <section id="historico" class="section">
+                <h2>Histórico de Pedidos</h2>
+                <div class="estoque-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID do Pedido</th>
+                                <th>Data</th>
+                                <th>Produtos</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historicoTableBody">
+                            <!-- Dados serão inseridos via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="section">
+                <h2>Análises e Relatórios</h2>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>Movimentação de Estoque</h3>
+                        <canvas id="movimentacaoChart"></canvas>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Previsão de Demanda</h3>
+                        <canvas id="demandaChart"></canvas>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Produtos Mais Vendidos</h3>
+                        <canvas id="topProdutosChart"></canvas>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Resumo do Período</h3>
+                        <div class="resumo-periodo">
+                            <div class="resumo-item">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>Vendas Totais</span>
+                                <strong id="vendasTotais">0</strong>
+                            </div>
+                            <div class="resumo-item">
+                                <i class="fas fa-box"></i>
+                                <span>Produtos em Estoque</span>
+                                <strong id="produtosEstoque">0</strong>
+                            </div>
+                            <div class="resumo-item">
+                                <i class="fas fa-truck"></i>
+                                <span>Pedidos Pendentes</span>
+                                <strong id="pedidosPendentes">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="analytics-controls">
+                    <div class="periodo-selector">
+                        <label for="periodoAnalise">Período de Análise:</label>
+                        <select id="periodoAnalise">
+                            <option value="7">Últimos 7 dias</option>
+                            <option value="30">Últimos 30 dias</option>
+                            <option value="90">Últimos 90 dias</option>
+                            <option value="365">Último ano</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" id="exportarRelatorio">
+                        <i class="fas fa-download"></i> Exportar Relatório
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check authentication
+            const token = localStorage.getItem('fornecedorToken');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Navigation
+            const navLinks = document.querySelectorAll('.main-nav a');
+            const sections = document.querySelectorAll('.section');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetSection = link.getAttribute('data-section');
+                    
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    
+                    sections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === targetSection) {
+                            section.classList.add('active');
+                            if (targetSection === 'analytics') {
+                                loadAnalytics();
+                            }
+                        }
+                    });
+                });
+            });
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.removeItem('fornecedorToken');
+                window.location.href = 'login.html';
+            });
+
+            // Load supplier's products
+            async function loadProdutos() {
+                try {
+                    const response = await fetch('api/fornecedor-produtos.php', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        updateProdutosTable(data.data);
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar produtos:', error);
+                }
+            }
+
+            function updateProdutosTable(produtos) {
+                const tableBody = document.getElementById('produtosTableBody');
+                tableBody.innerHTML = '';
+                
+                produtos.forEach(produto => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${produto.id}</td>
+                        <td>${produto.nome}</td>
+                        <td>${produto.quantidade}</td>
+                        <td>${getStatusBadge(produto.status)}</td>
+                        <td>${new Date(produto.updated_at).toLocaleString()}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            function getStatusBadge(status) {
+                const badges = {
+                    'normal': '<span class="badge badge-success">Normal</span>',
+                    'baixo': '<span class="badge badge-warning">Baixo</span>',
+                    'critico': '<span class="badge badge-danger">Crítico</span>'
+                };
+                return badges[status] || badges.normal;
+            }
+
+            // Analytics Functions
+            async function loadAnalytics() {
+                try {
+                    const periodo = document.getElementById('periodoAnalise').value;
+                    const response = await fetch(`api/fornecedor-analytics.php?periodo=${periodo}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        updateCharts(data.data);
+                        updateResumo(data.data.resumo);
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar análises:', error);
+                }
+            }
+
+            function updateCharts(data) {
+                // Movimentação de Estoque Chart
+                new Chart(document.getElementById('movimentacaoChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.movimentacao.labels,
+                        datasets: [{
+                            label: 'Entradas',
+                            data: data.movimentacao.entradas,
+                            borderColor: '#2ecc71',
+                            tension: 0.1
+                        }, {
+                            label: 'Saídas',
+                            data: data.movimentacao.saidas,
+                            borderColor: '#e74c3c',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Movimentação de Estoque'
+                            }
+                        }
+                    }
+                });
+
+                // Previsão de Demanda Chart
+                new Chart(document.getElementById('demandaChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.previsao.labels,
+                        datasets: [{
+                            label: 'Demanda Real',
+                            data: data.previsao.real,
+                            borderColor: '#3498db',
+                            tension: 0.1
+                        }, {
+                            label: 'Previsão',
+                            data: data.previsao.previsao,
+                            borderColor: '#9b59b6',
+                            borderDash: [5, 5],
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Previsão de Demanda'
+                            }
+                        }
+                    }
+                });
+
+                // Top Produtos Chart
+                new Chart(document.getElementById('topProdutosChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.topProdutos.labels,
+                        datasets: [{
+                            label: 'Quantidade Vendida',
+                            data: data.topProdutos.valores,
+                            backgroundColor: '#3498db'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Top 5 Produtos Mais Vendidos'
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateResumo(resumo) {
+                document.getElementById('vendasTotais').textContent = resumo.vendasTotais;
+                document.getElementById('produtosEstoque').textContent = resumo.produtosEstoque;
+                document.getElementById('pedidosPendentes').textContent = resumo.pedidosPendentes;
+            }
+
+            // Event Listeners
+            document.getElementById('periodoAnalise').addEventListener('change', loadAnalytics);
+            document.getElementById('exportarRelatorio').addEventListener('click', () => {
+                // Implementar exportação do relatório
+                alert('Funcionalidade de exportação será implementada em breve!');
+            });
+
+            // Initial load
+            loadProdutos();
+        });
+    </script>
+</body>
+</html> 
