@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Estoque - Área Administrativa</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-boxes"></i> Gestão de Estoque - Área Administrativa</h1>
+            <div class="admin-info">
+                <span id="adminName">Administrador</span>
+                <button id="logoutBtn" class="btn-secondary"><i class="fas fa-sign-out-alt"></i> Sair</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="admin-dashboard">
+                <div class="admin-controls">
+                    <button class="btn-primary" id="novoProduto">
+                        <i class="fas fa-plus"></i> Novo Produto
+                    </button>
+                    <button class="btn-secondary" id="exportarDados">
+                        <i class="fas fa-file-export"></i> Exportar Dados
+                    </button>
+                    <button class="btn-secondary" id="importarDados">
+                        <i class="fas fa-file-import"></i> Importar Dados
+                    </button>
+                </div>
+
+                <div class="estoque-filters">
+                    <input type="text" id="searchProduto" placeholder="Pesquisar produto...">
+                    <select id="filterCategoria">
+                        <option value="">Todas as Categorias</option>
+                        <option value="eletronicos">Eletrônicos</option>
+                        <option value="moveis">Móveis</option>
+                        <option value="alimentos">Alimentos</option>
+                        <option value="vestuario">Vestuário</option>
+                    </select>
+                </div>
+
+                <div class="estoque-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Produto</th>
+                                <th>Categoria</th>
+                                <th>Quantidade</th>
+                                <th>Preço Unit.</th>
+                                <th>Valor Total</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="estoqueTableBody">
+                            <!-- Dados serão inseridos via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal para Adicionar/Editar Produto -->
+            <div id="produtoModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3>Adicionar/Editar Produto</h3>
+                    <form id="produtoForm">
+                        <div class="form-group">
+                            <label for="nomeProduto">Nome do Produto</label>
+                            <input type="text" id="nomeProduto" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="categoriaProduto">Categoria</label>
+                            <select id="categoriaProduto" required>
+                                <option value="eletronicos">Eletrônicos</option>
+                                <option value="moveis">Móveis</option>
+                                <option value="alimentos">Alimentos</option>
+                                <option value="vestuario">Vestuário</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="quantidadeProduto">Quantidade</label>
+                            <input type="number" id="quantidadeProduto" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="precoProduto">Preço Unitário</label>
+                            <input type="number" id="precoProduto" min="0" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="minimoProduto">Quantidade Mínima</label>
+                            <input type="number" id="minimoProduto" min="0" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Verificar autenticação
+        function verificarAutenticacao() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = 'admin-login.html';
+            }
+        }
+
+        // Carregar dados do estoque
+        async function carregarEstoque() {
+            try {
+                const response = await fetch('api/estoque.php', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    atualizarTabelaEstoque(data);
+                } else {
+                    throw new Error('Erro ao carregar estoque');
+                }
+            } catch (error) {
+                alert('Erro ao carregar estoque: ' + error.message);
+            }
+        }
+
+        // Atualizar tabela de estoque
+        function atualizarTabelaEstoque(produtos) {
+            const tbody = document.getElementById('estoqueTableBody');
+            tbody.innerHTML = '';
+
+            produtos.forEach(produto => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${produto.id}</td>
+                    <td>${produto.nome}</td>
+                    <td>${produto.categoria}</td>
+                    <td>${produto.quantidade}</td>
+                    <td>R$ ${produto.preco.toFixed(2)}</td>
+                    <td>R$ ${(produto.quantidade * produto.preco).toFixed(2)}</td>
+                    <td>${getStatusBadge(produto.status)}</td>
+                    <td>
+                        <button class="btn-secondary btn-sm" onclick="editarProduto(${produto.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-secondary btn-sm" onclick="excluirProduto(${produto.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Função para obter o badge de status
+        function getStatusBadge(status) {
+            const badges = {
+                'normal': '<span class="badge badge-success">Normal</span>',
+                'baixo': '<span class="badge badge-warning">Baixo</span>',
+                'critico': '<span class="badge badge-danger">Crítico</span>'
+            };
+            return badges[status] || badges.normal;
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarAutenticacao();
+            carregarEstoque();
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.removeItem('adminToken');
+                window.location.href = 'admin-login.html';
+            });
+
+            // Novo Produto
+            document.getElementById('novoProduto').addEventListener('click', () => {
+                document.getElementById('produtoModal').style.display = 'block';
+            });
+
+            // Fechar Modal
+            document.querySelector('.close').addEventListener('click', () => {
+                document.getElementById('produtoModal').style.display = 'none';
+            });
+
+            // Form de Produto
+            document.getElementById('produtoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                // Implementar lógica de salvamento
+            });
+        });
+    </script>
+</body>
+</html> 

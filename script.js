@@ -21,38 +21,101 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Fornecedor Form
+    // Gerenciamento de Fornecedores
     const fornecedorForm = document.getElementById('fornecedorForm');
-    if (fornecedorForm) {
-        fornecedorForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                nome: document.getElementById('nomeFornecedor').value,
-                email: document.getElementById('emailFornecedor').value,
-                telefone: document.getElementById('telefoneFornecedor').value
-            };
-
-            try {
-                const response = await fetch('api/fornecedores.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    alert('Fornecedor cadastrado com sucesso!');
-                    fornecedorForm.reset();
-                } else {
-                    throw new Error('Erro ao cadastrar fornecedor');
-                }
-            } catch (error) {
-                alert('Erro ao cadastrar fornecedor: ' + error.message);
-            }
+    const fornecedoresTableBody = document.getElementById('fornecedoresTableBody');
+    
+    // Carregar fornecedores salvos
+    let fornecedores = JSON.parse(localStorage.getItem('fornecedores')) || [];
+    
+    // Função para salvar fornecedores
+    function salvarFornecedores() {
+        localStorage.setItem('fornecedores', JSON.stringify(fornecedores));
+    }
+    
+    // Função para atualizar a tabela
+    function atualizarTabelaFornecedores() {
+        fornecedoresTableBody.innerHTML = '';
+        fornecedores.forEach((fornecedor, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${fornecedor.nome}</td>
+                <td>${fornecedor.email}</td>
+                <td>${fornecedor.telefone}</td>
+                <td>${fornecedor.categoria}</td>
+                <td>
+                    <button class="btn-secondary btn-sm" onclick="editarFornecedor(${index})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-secondary btn-sm" onclick="excluirFornecedor(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            fornecedoresTableBody.appendChild(tr);
         });
     }
+    
+    // Função para adicionar fornecedor
+    fornecedorForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const fornecedor = {
+            nome: document.getElementById('nomeFornecedor').value,
+            email: document.getElementById('emailFornecedor').value,
+            telefone: document.getElementById('telefoneFornecedor').value,
+            endereco: document.getElementById('enderecoFornecedor').value,
+            categoria: document.getElementById('categoriaFornecedor').value
+        };
+        
+        fornecedores.push(fornecedor);
+        salvarFornecedores();
+        atualizarTabelaFornecedores();
+        fornecedorForm.reset();
+        
+        // Mostrar mensagem de sucesso
+        mostrarMensagem('Fornecedor cadastrado com sucesso!', 'success');
+    });
+    
+    // Função para editar fornecedor
+    window.editarFornecedor = function(index) {
+        const fornecedor = fornecedores[index];
+        document.getElementById('nomeFornecedor').value = fornecedor.nome;
+        document.getElementById('emailFornecedor').value = fornecedor.email;
+        document.getElementById('telefoneFornecedor').value = fornecedor.telefone;
+        document.getElementById('enderecoFornecedor').value = fornecedor.endereco;
+        document.getElementById('categoriaFornecedor').value = fornecedor.categoria;
+        
+        fornecedores.splice(index, 1);
+        salvarFornecedores();
+        atualizarTabelaFornecedores();
+    };
+    
+    // Função para excluir fornecedor
+    window.excluirFornecedor = function(index) {
+        if (confirm('Tem certeza que deseja excluir este fornecedor?')) {
+            fornecedores.splice(index, 1);
+            salvarFornecedores();
+            atualizarTabelaFornecedores();
+            mostrarMensagem('Fornecedor excluído com sucesso!', 'success');
+        }
+    };
+    
+    // Função para mostrar mensagens
+    function mostrarMensagem(mensagem, tipo) {
+        const mensagemDiv = document.createElement('div');
+        mensagemDiv.className = `mensagem ${tipo}`;
+        mensagemDiv.textContent = mensagem;
+        
+        document.body.appendChild(mensagemDiv);
+        
+        setTimeout(() => {
+            mensagemDiv.remove();
+        }, 3000);
+    }
+    
+    // Inicializar a tabela
+    atualizarTabelaFornecedores();
 
     // Estoque Verification
     const verificarEstoqueBtn = document.getElementById('verificarEstoque');
