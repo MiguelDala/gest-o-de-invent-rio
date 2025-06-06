@@ -1,103 +1,132 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão de Inventário - Miguel Dala</title>
+    <title>Sistema de Gestão de Inventário</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .cover-page {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 20px;
-        }
-
-        .cover-content {
-            max-width: 800px;
-            animation: fadeInUp 1s ease-out;
-        }
-
-        .cover-title {
-            font-size: 3.5em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .cover-subtitle {
-            font-size: 1.8em;
-            margin-bottom: 40px;
-            opacity: 0.9;
-        }
-
-        .cover-description {
-            font-size: 1.2em;
-            margin-bottom: 40px;
-            line-height: 1.6;
-        }
-
-        .enter-button {
-            padding: 15px 40px;
-            font-size: 1.2em;
-            background-color: white;
-            color: var(--primary-color);
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .enter-button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .cover-title {
-                font-size: 2.5em;
-            }
-            .cover-subtitle {
-                font-size: 1.4em;
-            }
-            .cover-description {
-                font-size: 1em;
-            }
-        }
-    </style>
 </head>
 <body>
-    <div class="cover-page">
-        <div class="cover-content">
-            <h1 class="cover-title">Miguel Dala</h1>
-            <h2 class="cover-subtitle">Sistema de Gestão de Inventário</h2>
-            <p class="cover-description">
-                Uma solução completa para gerenciamento de estoque, 
-                controle de fornecedores e análise de dados em tempo real.
-            </p>
-            <a href="login.html" class="enter-button">
-                <i class="fas fa-sign-in-alt"></i> Acessar Sistema
-            </a>
-        </div>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-boxes"></i>
+                <span>Gestão de Inventário</span>
+            </div>
+            <ul class="nav-links">
+                <li class="active">
+                    <a href="#dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                </li>
+                <li>
+                    <a href="#fornecedores"><i class="fas fa-truck"></i> Fornecedores</a>
+                </li>
+                <li>
+                    <a href="#estoque"><i class="fas fa-warehouse"></i> Estoque</a>
+                </li>
+                <li>
+                    <a href="#produtos"><i class="fas fa-box"></i> Produtos</a>
+                </li>
+                <li>
+                    <a href="#entradas"><i class="fas fa-arrow-right"></i> Entradas</a>
+                </li>
+                <li>
+                    <a href="#saidas"><i class="fas fa-arrow-left"></i> Saídas</a>
+                </li>
+                <li>
+                    <a href="#relatorios"><i class="fas fa-chart-bar"></i> Relatórios</a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <header>
+                <div class="header-content">
+                    <h1>Dashboard</h1>
+                    <div class="user-info">
+                        <i class="fas fa-bell"></i>
+                        <div class="user-profile">
+                            <img src="https://via.placeholder.com/40" alt="User">
+                            <a href="admin_login.php" class="btn-admin">
+                                <i class="fas fa-user-shield"></i>
+                                Área Admin
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-cards">
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>Total de Produtos</h3>
+                        <p>1,234</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>Produtos em Baixa</h3>
+                        <p>15</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>Pedidos Pendentes</h3>
+                        <p>8</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-warehouse"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3>Armazéns</h3>
+                        <p>3</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-sections">
+                <section class="alertas">
+                    <h2>Alertas de Estoque</h2>
+                    <div class="alert-list">
+                        <div class="alert-item">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <div class="alert-info">
+                                <h4>Produto em Baixa</h4>
+                                <p>Produto XYZ está com estoque abaixo do mínimo</p>
+                            </div>
+                            <button class="btn-action">Verificar</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="pedidos">
+                    <h2>Pedidos Recentes</h2>
+                    <div class="pedidos-list">
+                        <div class="pedido-item">
+                            <div class="pedido-info">
+                                <h4>Pedido #1234</h4>
+                                <p>Fornecedor: ABC Ltda</p>
+                                <p>Status: Em Transporte</p>
+                            </div>
+                            <div class="pedido-actions">
+                                <button class="btn-action">Detalhes</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
     </div>
 </body>
 </html> 
